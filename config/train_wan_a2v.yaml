@@ -1,0 +1,98 @@
+# name
+model_type: 'a2v'
+task: 't2v-1.3B'  # 用于加载vae text-encoder等权重和参数
+
+# data
+train_batch_size: 6
+train_data_dir: '/mnt/data/1498'
+train_data_meta: "/mnt/data/1498/a2v_openhumanvid.json,/mnt/data/1498/a2v_hallo3.json,/mnt/data/1498/a2v_lipsync.json,/mnt/data/1498/a2v_youtube_solosing.json,/mnt/data/1498/a2v_youtube_solosing.json"
+tokenizer_max_length: 256
+video_repeat: 1
+video_sample_n_frames: 81
+video_sample_size: 512
+video_sample_stride: 1.0
+motion_frame_num: 5
+
+dataloader_num_workers: 8
+enable_bucket: True
+disable_mask: True  # 为True时，audio spatial cross-attention不使用mask限制
+
+# model
+pretrained_model_name_or_path: '/mnt/data/public_ckpt/Wan-AI/Wan2.1-T2V-1.3B'
+# transformer_path: 'checkpoints/20250711_fs2v_wo-dropout/checkpoint-12000/transformer/diffusion_pytorch_model.safetensors'
+transformer_path: 'checkpoints/20250714_a2v/checkpoint-4000/transformer/diffusion_pytorch_model.safetensors'
+audio_pe_path: 'checkpoints/20250714_a2v/checkpoint-4000/audio2token/diffusion_pytorch_model.safetensors'
+resume_from_checkpoint: #"latest"
+trainable_modules:
+    # - audio_cross_attn
+
+# train
+seed: 42
+
+use_deepspeed: True
+low_vram: false
+offload_optimizer_device: None
+mixed_precision: 'bf16'
+sample_solver: 'unipc'
+
+noise_share_in_frames: false
+noise_share_in_frames_ratio: 0.5
+
+num_train_epochs: 100
+max_train_steps: 500000
+gradient_accumulation_steps: 1
+gradient_checkpointing: True
+allow_tf32: false
+
+weighting_scheme: None
+audio_condition_drop_ratio: 0.1
+text_condition_drop_ratio: 0.1
+ref_condition_drop_ratio: 0.0
+
+report_model_info: True
+
+# loss
+logit_mean: 0.0
+logit_std: 1.0
+loss_type: 'flow'
+motion_sub_loss: false
+motion_sub_loss_ratio: 0.25
+
+max_grad_norm: 0.05
+initial_grad_norm_ratio: 5
+abnormal_norm_clip_start: 1000
+checkpointing_steps: 1000
+checkpoints_total_limit: 5
+mode_scale: 1.29
+
+# optimizer
+use_8bit_adam: True
+use_came: false
+learning_rate: 1.0e-05
+
+scale_lr: false
+lr_scheduler: 'constant_with_warmup'
+lr_warmup_steps: 100
+
+adam_beta1: 0.9
+adam_beta2: 0.999
+adam_epsilon: 1.0e-10
+adam_weight_decay: 0.05
+
+# validation
+pre_validation: True
+validation_epochs: 5
+validation_steps: 500
+validation_images:
+  - "examples/main1.png"
+validation_audios:
+  - "examples/main1.wav"
+validation_prompts:
+  - "A woman is singing and playing guitar."
+
+# log
+report_to: 'tensorboard'
+# output_dir: 'checkpoints/20250714_a2v'  # 无mask
+output_dir: 'checkpoints/20250715_a2v_mf5'  # 无mask
+logging_dir: 'logs'
+tracker_project_name: 'trackers'
